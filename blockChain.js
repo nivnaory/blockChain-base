@@ -63,6 +63,7 @@ function toLocalIp(port) {
     return `127.0.0.1:${port}`
 }
 
+
 //['4000', '4001'] -> ['127.0.0.1:4000', '127.0.0.1:4001']
 function getPeerIps(peers) {
     return peers.map(peer => toLocalIp(peer))
