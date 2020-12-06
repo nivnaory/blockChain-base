@@ -24,7 +24,7 @@ fs.readFile('transactionMem.txt', 'utf8', (err, data) => {
   lines=data.split('\n')
   for (i=0;i<lines.length;i++){
     transactionDetails=lines[i].split(' ')
-    MemPool.push(new Transaction(transactionDetails[0],transactionDetails[1],transactionDetails[2]))
+    MemPool.push(new Transaction(transactionDetails[0],transactionDetails[1],Number(transactionDetails[2])))
   }
 });
 

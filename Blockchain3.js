@@ -84,6 +84,7 @@ class Blockchain {
         this.pendingTransaction = []
         this.miningReward = 100
         this.filter=new PartitionedBloomFilter(30,5,0.5)
+
     }
 
     createGenesisBlock() {
@@ -119,21 +120,27 @@ class Blockchain {
         this.pendingTransaction.push(transaction)
     }
     getBalanceOfAddress(address) {
-        let balance = 0
-        for (const block of this.chain) {
-            log(block.transactions)
+        var balance = 0
+        
+        for (var i =1;i<this.chain.length;i++) {
+            let block=this.chain[i]
+            
             for (const trans of block.transactions) {
-                log(trans.toAddress)
+           
+                 
                 if (trans.fromAddress === address) {
                     balance -= trans.amount
                 }
+
                 if (trans.toAddress === address) {
+
                     balance += trans.amount
+                   
                 }
 
             }
-
         }
+    
         return balance
     }
     isChainValidate() {

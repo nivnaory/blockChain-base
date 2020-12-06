@@ -14,6 +14,7 @@ const {
     peers
 } = extractPeersAndMyPort()
 const topology = require('fully-connected-topology')
+const { Socket } = require('dgram')
 const sockets = {}
 let numtimes=0
 balance = 1000
@@ -34,16 +35,15 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
             sockets['4000'].write('balance ' + me)
         }
     })
-    socket.on('data', data => {
+        socket.on('data', data => {
         if (RegExp('[0-9]+').test(data.toString().trim())){
             log('my balance is '+data.toString().trim())
         }else{
             log(data.toString())
         }
+       
     })
 })
-
-
 function extractPeersAndMyPort() {
     return {
         me: argv[2],
