@@ -1,8 +1,11 @@
 const SHA256 = require('crypto-js/sha256')
-const MerkleTree = require('merkletreejs')
+const {MerkleTree} = require('merkletreejs')
 const crypto = require('crypto')
-const PartitionedBloomFilter = require('bloom-filter')
-
+const {PartitionedBloomFilter} = require('bloom-filters')
+const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants')
+const {
+    log
+} = console
 
 
 class WalletSPV{
@@ -17,6 +20,9 @@ class Transaction {
         this.fromAddress = fromAddress
         this.toAddress = toAddress
         this.amount = amount
+    }
+    toString(){
+        return this.fromAddress+' '+this.toAddress+' '+this.amount
     }
     /*
     checkIfTransactionValid(){
@@ -44,12 +50,12 @@ class Block {
         this.previousHash = previousHash
         this.timestamp = timestamp
         this.transactions = transactions
-        createMerkleRoot()
+        this.createMerkleRoot()
         this.hash = this.calculateHash()
         this.nonce = 0
     }
     createMerkleRoot(){
-        const leaves = this.transactions.map(x => sha256(x))
+        const leaves = this.transactions.map(x => sha256(x.toString()))
         this.tree = new MerkleTree(leaves, sha256)
         //this.root = tree.getRoot()
     }
@@ -77,11 +83,11 @@ class Blockchain {
         this.difficulty = 2
         this.pendingTransaction = []
         this.miningReward = 100
-        this.filter=new PartitionedBloomFilter()
+        this.filter=new PartitionedBloomFilter(30,5,0.5)
     }
 
     createGenesisBlock() {
-        return new Block('01/01/2009', 'Genesis block', 0)
+        return new Block('01/01/2009', ['Genesis block'], 0)
     }
     getLatestBlock() {
         return this.chain[this.chain.length - 1]
@@ -115,7 +121,9 @@ class Blockchain {
     getBalanceOfAddress(address) {
         let balance = 0
         for (const block of this.chain) {
+            log(block.transactions)
             for (const trans of block.transactions) {
+                log(trans.toAddress)
                 if (trans.fromAddress === address) {
                     balance -= trans.amount
                 }

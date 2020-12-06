@@ -26,7 +26,6 @@ const peerIps = getPeerIps(peers)
 topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp)
     log('connected to peer - ', peerPort)
-
     sockets[peerPort] = socket
     stdin.on('data', data => { //on user input
         const message = data.toString().trim()
