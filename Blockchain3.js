@@ -120,22 +120,16 @@ class Blockchain {
         this.pendingTransaction.push(transaction)
     }
     getBalanceOfAddress(address) {
-        var balance = 0
-        
+        let balance = 0
         for (var i =1;i<this.chain.length;i++) {
             let block=this.chain[i]
-            
             for (const trans of block.transactions) {
-           
-                 
                 if (trans.fromAddress === address) {
                     balance -= trans.amount
                 }
 
                 if (trans.toAddress === address) {
-
-                    balance += trans.amount
-                   
+                    balance += trans.amount                   
                 }
 
             }

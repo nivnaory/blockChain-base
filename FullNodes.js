@@ -17,6 +17,8 @@ const {
 } = extractPeersAndMyPort()
 var fs = require('fs-extra');
 const sockets = {}
+var AsafNivCoin=new Blockchain()
+var num=0
 MemPool=[]
 balance = 1000
 fs.readFile('transactionMem.txt', 'utf8', (err, data) => {
@@ -38,7 +40,6 @@ const peerIps = getPeerIps(peers)
 //connect to peers
 topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp)
-    let AsafNivCoin=new Blockchain()
     let i=0
     sockets[peerPort] = socket
     if (Object.keys(sockets).length===2){
@@ -68,6 +69,11 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
             i++
         }
     }
+    stdin.on('data', data => { //on user 
+        if (data.toString().trim()==='balance'){
+            log(AsafNivCoin.getBalanceOfAddress(me)+balance)
+        }
+    }) 
     socket.on('data', data => { 
         if(data.toString().trim().split(' ')[0]==='balance'){
             address=data.toString().trim().split(' ')[1]
