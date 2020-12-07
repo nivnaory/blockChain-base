@@ -20,7 +20,6 @@ const sockets = {}
 var AsafNivCoin=new Blockchain()
 var num=0
 MemPool=[]
-balance = 1000
 fs.readFile('transactionMem.txt', 'utf8', (err, data) => {
   if (err) throw err;
   lines=data.split('\n')
@@ -41,30 +40,14 @@ const peerIps = getPeerIps(peers)
 topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp)
     let i=0
+    let balance = 1000
+    
     sockets[peerPort] = socket
     if (Object.keys(sockets).length===2){
         while (i<MemPool.length){
-            /*
-            fromAddress=MemPool[i].fromAddress
-            toAddress=MemPool[i].toAddress
-            amount=MemPool[i].amount
-            if (fromAddress !== null){
-                if (fromAddress === me){
-                    balance-=amount
-                }else{
-                    sockets[fromAddress.toString()].write((amount*(-1)).toString())
-                    sockets[fromAddress.toString()].on('data',data=>)
-                }
-            }
-            if (toAddress == me){
-                balance+=amount
-            }else{
-                sockets[toAddress.toString()].write(amount.toString())
-            }
-            */
             AsafNivCoin.pendingTransaction.push(MemPool[i])
             if (AsafNivCoin.pendingTransaction.length == 4){
-                MemPool.push(AsafNivCoin.miningPendingTransaction(me))
+                AsafNivCoin.miningPendingTransaction(me)
             }
             i++
         }

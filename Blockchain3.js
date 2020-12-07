@@ -94,26 +94,21 @@ class Blockchain {
         return this.chain[this.chain.length - 1]
     }
     
-    /*addBlock(newBlock) {
-        newBlock.previousHash = this.getLatestBlock().hash
-        newBlock.hash = newBlock.calculateHash()
-        newBlock.mineBlock(this.difficulty)
-        this.chain.push(newBlock)
-    }*/
 
     miningPendingTransaction(miningRewardAddress) {
         const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward)
         //this.pendingTransaction.push(rewardTx)
-        this.filter.add(this.pendingTransaction[0])
-        this.filter.add(this.pendingTransaction[1])
-        this.filter.add(this.pendingTransaction[2])
-        this.filter.add(this.pendingTransaction[3])
+        this.filter.add(this.pendingTransaction[0].toString())
+        this.filter.add(this.pendingTransaction[1].toString())
+        this.filter.add(this.pendingTransaction[2].toString())
+        this.filter.add(this.pendingTransaction[3].toString())
         let block = new Block(Date.now(), this.pendingTransaction, this.getLatestBlock().hash)
         block.mineBlock(this.difficulty)
         console.log('Block successfully mined')
 
         this.chain.push(block)
         this.pendingTransaction = []
+        block.transactions.push(rewardTx)
         return rewardTx
     }
     createTransaction(transaction) {
@@ -126,12 +121,26 @@ class Blockchain {
             for (const trans of block.transactions) {
                 if (trans.fromAddress === address) {
                     balance -= trans.amount
+                    
                 }
 
                 if (trans.toAddress === address) {
-                    balance += trans.amount                   
+                    balance += trans.amount        
+                             
                 }
+                
+            }
+        }
+        for (var i=0;i<this.pendingTransaction.length;i++)
+        {
+            if (this.pendingTransaction[i].fromAddress === address) {
+                balance -= this.pendingTransaction[i].amount
+                
+            }
 
+            if (this.pendingTransaction[i].toAddress === address) {
+                balance += this.pendingTransaction[i].amount        
+                         
             }
         }
     
@@ -153,7 +162,8 @@ class Blockchain {
         return true
     }
     transactionValidation(transaction){
-        return this.filter.has(transaction)
+       
+        return this.filter.has(transaction.toString())
     }
 }
 

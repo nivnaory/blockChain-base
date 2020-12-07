@@ -16,7 +16,7 @@ const {
 const topology = require('fully-connected-topology')
 const sockets = {}
 let numtimes=0
-balance = 1000
+
 const myIp = toLocalIp(me)
 const peerIps = getPeerIps(peers)
 
@@ -24,6 +24,7 @@ const peerIps = getPeerIps(peers)
 topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     const peerPort = extractPortFromIp(peerIp)
     let i=0
+   let balance = 1000
     sockets[peerPort] = socket
     log("if you want to validate transaction please write: fromPeer toPeer amount")
     stdin.on('data', data => { //on user 
@@ -36,7 +37,7 @@ topology(myIp, peerIps).on('connection', (socket, peerIp) => {
     })
         socket.on('data', data => {
         if (RegExp('[0-9]+').test(data.toString().trim())){
-            log('my balance is '+data.toString().trim())
+            log('my balance is ',Number(data.toString().trim())+balance)
         }else{
             log(data.toString())
         }
