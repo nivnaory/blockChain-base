@@ -2,18 +2,9 @@ const SHA256 = require('crypto-js/sha256')
 const {MerkleTree} = require('merkletreejs')
 const crypto = require('crypto')
 const {PartitionedBloomFilter} = require('bloom-filters')
-const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants')
 const {
     log
 } = console
-
-
-class WalletSPV{
-    constructor(address,balance){
-        this.address=address
-        this.balance=balance
-    }
-}
 
 class Transaction {
     constructor(fromAddress, toAddress, amount) {
@@ -24,19 +15,6 @@ class Transaction {
     toString(){
         return this.fromAddress+' '+this.toAddress+' '+this.amount
     }
-    /*
-    checkIfTransactionValid(){
-        if (this.fromWallet.balance>= this.amount){
-            return true
-        }else{
-            return false
-        }
-    }
-    updateWallets(){
-        this.fromWallet.balance-=amount
-        this.toWallet.balance+=amount
-    }
-    */
 }
 
 
@@ -49,13 +27,20 @@ class Block {
     constructor(timestamp, transactions, previousHash = '') {
         this.previousHash = previousHash
         this.timestamp = timestamp
-        this.transactions = transactions
-        this.createMerkleRoot()
-        this.hash = this.calculateHash()
-        this.nonce = 0
+        this.transactions=transactions
+        this.filter=new PartitionedBloomFilter(5,5,0.5)
+        if (transactions!==''){
+            this.filter.add(transactions[0].toString())
+            this.filter.add(transactions[1].toString())
+            this.filter.add(transactions[2].toString())
+            this.filter.add(transactions[3].toString())
+            this.createMerkleTree(transactions)
+            this.hash = this.calculateHash()
+            this.nonce = 0
+        }
     }
-    createMerkleRoot(){
-        const leaves = this.transactions.map(x => sha256(x.toString()))
+    createMerkleTree(transactions){
+        const leaves = transactions.map(x => sha256(x.toString()))
         this.tree = new MerkleTree(leaves, sha256)
         //this.root = tree.getRoot()
     }
@@ -70,10 +55,20 @@ class Block {
         }
         console.log('Block mined' + this.hash);
     }
-    isTransactionInBlock(transaction){
+    transactionProofOfWork(transaction){
         const leaf = sha256(transaction)
         const proof = tree.getProof(leaf)
         return this.tree.verify(proof, leaf, this.tree.getRoot()) 
+    }
+    isTransactionInBlock(transaction){
+        return this.filter.has(transaction.toString())
+    }
+    addTransaction(transaction){
+        this.transactions.push(transaction)
+        this.filter.add(transaction.toString())
+        var leaves=this.tree.getLeaves().map(x => x.toString())
+        leaves.push(sha256(transaction.toString()))
+        this.tree=new MerkleTree(leaves,sha256)
     }
 
 }
@@ -83,12 +78,10 @@ class Blockchain {
         this.difficulty = 2
         this.pendingTransaction = []
         this.miningReward = 100
-        this.filter=new PartitionedBloomFilter(30,5,0.5)
-
     }
 
     createGenesisBlock() {
-        return new Block('01/01/2009', ['Genesis block'], 0)
+        return new Block('01/01/2009', '', 0)
     }
     getLatestBlock() {
         return this.chain[this.chain.length - 1]
@@ -96,19 +89,13 @@ class Blockchain {
     
 
     miningPendingTransaction(miningRewardAddress) {
-        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward)
-        //this.pendingTransaction.push(rewardTx)
-        this.filter.add(this.pendingTransaction[0].toString())
-        this.filter.add(this.pendingTransaction[1].toString())
-        this.filter.add(this.pendingTransaction[2].toString())
-        this.filter.add(this.pendingTransaction[3].toString())
+        const rewardTx = new Transaction('null', miningRewardAddress, this.miningReward)
         let block = new Block(Date.now(), this.pendingTransaction, this.getLatestBlock().hash)
         block.mineBlock(this.difficulty)
         console.log('Block successfully mined')
-
         this.chain.push(block)
         this.pendingTransaction = []
-        block.transactions.push(rewardTx)
+        block.addTransaction(rewardTx)
         return rewardTx
     }
     createTransaction(transaction) {
@@ -162,8 +149,12 @@ class Blockchain {
         return true
     }
     transactionValidation(transaction){
-       
-        return this.filter.has(transaction.toString())
+        for (var i=1;i<this.chain.length;i++){
+            if (this.chain[i].isTransactionInBlock(transaction)===true){
+                return true
+            }
+        }
+        return false
     }
 }
 
